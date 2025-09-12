@@ -35,10 +35,7 @@ class Player extends SpriteAnimationComponent
       autoStart: false,
     );
 
-    _laserPowerupTimer = Timer(
-      10.0,
-      autoStart: false,
-    );
+    _laserPowerupTimer = Timer(10.0, autoStart: false);
   }
 
   @override
@@ -49,11 +46,13 @@ class Player extends SpriteAnimationComponent
 
     size *= 0.3;
 
-    add(RectangleHitbox.relative(
-      Vector2(0.6, 0.9),
-      parentSize: size,
-      anchor: Anchor.center,
-    ));
+    add(
+      RectangleHitbox.relative(
+        Vector2(0.6, 0.9),
+        parentSize: size,
+        anchor: Anchor.center,
+      ),
+    );
 
     return super.onLoad();
   }
@@ -71,13 +70,11 @@ class Player extends SpriteAnimationComponent
       _laserPowerupTimer.update(dt);
     }
 
-    // combine the joystick input with the keyboard movement
     final Vector2 movement = game.joystick.relativeDelta + _keyboardMovement;
-    position += movement.normalized() * 200 * dt;
+    position += movement.normalized() * 400 * dt;
 
     _handleScreenBounds();
 
-    // perform the shooting logic
     _elapsedFireTime += dt;
     if (_isShooting && _elapsedFireTime >= _fireCooldown) {
       _fireLaser();
@@ -100,14 +97,8 @@ class Player extends SpriteAnimationComponent
     final double screenWidth = game.size.x;
     final double screenHeight = game.size.y;
 
-    // prevent the player from going off the top or bottom edges
-    position.y = clampDouble(
-      position.y,
-      size.y / 2,
-      screenHeight - size.y / 2,
-    );
+    position.y = clampDouble(position.y, size.y / 2, screenHeight - size.y / 2);
 
-    // perform wraparound if the player goes over the left or right edge
     if (position.x < 0) {
       position.x = screenWidth;
     } else if (position.x > screenWidth) {
@@ -126,9 +117,7 @@ class Player extends SpriteAnimationComponent
   void _fireLaser() {
     game.audioManager.playSound('laser');
 
-    game.add(
-      Laser(position: position.clone() + Vector2(0, -size.y / 2)),
-    );
+    game.add(Laser(position: position.clone() + Vector2(0, -size.y / 2)));
 
     if (_laserPowerupTimer.isRunning()) {
       game.add(
@@ -147,32 +136,27 @@ class Player extends SpriteAnimationComponent
   }
 
   void _handleDestruction() async {
-    animation = SpriteAnimation.spriteList(
-      [
-        await game.loadSprite('player_${_color}_off.png'),
-      ],
-      stepTime: double.infinity,
+    animation = SpriteAnimation.spriteList([
+      await game.loadSprite('player_${_color}_off.png'),
+    ], stepTime: double.infinity);
+
+    add(
+      ColorEffect(
+        const Color.fromRGBO(255, 255, 255, 1.0),
+        EffectController(duration: 0.0),
+      ),
     );
 
-    add(ColorEffect(
-      const Color.fromRGBO(255, 255, 255, 1.0),
-      EffectController(duration: 0.0),
-    ));
+    add(
+      OpacityEffect.fadeOut(
+        EffectController(duration: 3.0),
+        onComplete: () => _explosionTimer.stop(),
+      ),
+    );
 
-    add(OpacityEffect.fadeOut(
-      EffectController(duration: 3.0),
-      onComplete: () => _explosionTimer.stop(),
-    ));
+    add(MoveEffect.by(Vector2(0, 200), EffectController(duration: 3.0)));
 
-    add(MoveEffect.by(
-      Vector2(0, 200),
-      EffectController(duration: 3.0),
-    ));
-
-    add(RemoveEffect(
-      delay: 4.0,
-      onComplete: game.playerDied,
-    ));
+    add(RemoveEffect(delay: 4.0, onComplete: game.playerDied));
 
     _isDestroyed = true;
 
@@ -185,8 +169,9 @@ class Player extends SpriteAnimationComponent
       position.y - size.y / 2 + _random.nextDouble() * size.y,
     );
 
-    final ExplosionType explosionType =
-        _random.nextBool() ? ExplosionType.smoke : ExplosionType.fire;
+    final ExplosionType explosionType = _random.nextBool()
+        ? ExplosionType.smoke
+        : ExplosionType.fire;
 
     final Explosion explosion = Explosion(
       position: explosionPosition,
@@ -232,16 +217,20 @@ class Player extends SpriteAnimationComponent
   @override
   bool onKeyEvent(KeyEvent event, Set<LogicalKeyboardKey> keysPressed) {
     _keyboardMovement.x = 0;
-    _keyboardMovement.x +=
-        keysPressed.contains(LogicalKeyboardKey.arrowLeft) ? -1 : 0;
-    _keyboardMovement.x +=
-        keysPressed.contains(LogicalKeyboardKey.arrowRight) ? 1 : 0;
+    _keyboardMovement.x += keysPressed.contains(LogicalKeyboardKey.arrowLeft)
+        ? -1
+        : 0;
+    _keyboardMovement.x += keysPressed.contains(LogicalKeyboardKey.arrowRight)
+        ? 1
+        : 0;
 
     _keyboardMovement.y = 0;
-    _keyboardMovement.y +=
-        keysPressed.contains(LogicalKeyboardKey.arrowUp) ? -1 : 0;
-    _keyboardMovement.y +=
-        keysPressed.contains(LogicalKeyboardKey.arrowDown) ? 1 : 0;
+    _keyboardMovement.y += keysPressed.contains(LogicalKeyboardKey.arrowUp)
+        ? -1
+        : 0;
+    _keyboardMovement.y += keysPressed.contains(LogicalKeyboardKey.arrowDown)
+        ? 1
+        : 0;
 
     return true;
   }
