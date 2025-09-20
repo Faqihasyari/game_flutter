@@ -1,4 +1,4 @@
 # game_star
-take from github
+taking from foreign github
 learn flame engine
 A new Flutter project.
